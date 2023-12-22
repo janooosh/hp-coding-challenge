@@ -4,6 +4,7 @@ Welcome and thank you for accepting the challenge 🚀
 
 ## System Requirements
 - Docker
+- PostgreSQL
 - PHP 8.2
 - Composer
 
