@@ -1,6 +1,6 @@
 This coding challenge has been used to challenge new devs for Hello Pine. 
 It contains an excerpt of a production feature of Hello Pine - merging products.
-Please see the solutions branch for an example solution.
+Please see the **solution** branch for an example solution.
 
 Candidates have been supplied with the following instructions:
 https://docs.google.com/document/d/1ZmrOOIGs8QftZiQGEPYsFrrFi6DrTQfiekErcSzPj44
@@ -18,8 +18,10 @@ Welcome and thank you for accepting the challenge 🚀
 ## Setup
 - Clone the repsitory
 - Install the composer dependencies
+- Copy .env.example to .env
 - Run ./vendor/bin/sail up
-- From inside the docker container, run php artisan migrate
+- From inside the docker container, run php artisan migrate and php artisan key:generate
+- Run npm install && npm run dev (outside of the container)
 
 ## Running the test
 - From inside the docker container, run php artisan test
