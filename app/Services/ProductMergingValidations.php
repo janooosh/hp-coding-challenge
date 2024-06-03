@@ -5,7 +5,7 @@ namespace App\Services;
 use App\Models\Product;
 use Exception;
 use Illuminate\Support\Collection;
-use Illuminate\Support\Facades\Log;
+use InvalidArgumentException;
 
 /**
  * Functions to facilitate the validation of merging products together.
@@ -23,8 +23,17 @@ class ProductMergingValidations {
      * @return bool
      */
     public static function checkBrandIdMatch(Collection $products, ?int $brandId = null):bool {
-        // TO DO
-        return false;
+        $brandIds = $products->pluck('brand_id')->unique();
+
+        if ($brandIds->isEmpty()) {
+            throw new InvalidArgumentException("Products don't have brand ids");
+        }
+
+        if ($brandIds->count() > 1) {
+            return false;
+        }
+
+        return $brandId ? $brandIds->first() == $brandId : true;
     }
 
     /**
@@ -37,8 +46,15 @@ class ProductMergingValidations {
      * @return bool
      */
     public static function checkProductsNotMerged(Collection $products, ?Product $parentProduct=null):bool {
-        // TO DO (you can disregard the parentProduct)
-        return false;
+        $parentProductIds = $products->pluck('parent_product_id')->filter()->unique();
+
+        if ($parentProductIds->isEmpty()) {
+            return true;
+        }
+
+        return $parentProduct
+            && $parentProductIds->count() === 1
+            && $parentProductIds->first() === $parentProduct->id;
     }
 
     /**
@@ -51,8 +67,55 @@ class ProductMergingValidations {
      * @param Collection $optionValues (product_variant_id, global_field_id, value)
      */
     public static function checkConsistentOptionValues(Collection $optionValues):bool {
-        // TO DO
-        return false;
+        // (1) There is at least one option (global_field_id) for each product variant (no nulls)
+        $emptyVariants = $optionValues->firstWhere('global_field_id', null);
+        if($emptyVariants) {
+            return false;
+        }
+
+        // (2) Each product_variant_id has the same number of global_field_ids with a non-empty value and
+        // (3) All variants share the same global_field_ids
+        // (4) Each variant has a unique combination of global_field_id / value
+        $productVariantIds = $optionValues->pluck('product_variant_id')->unique();
+        $globalFieldIds = $optionValues->pluck('global_field_id')->unique();
+
+        $uniqueCombinations = [];
+
+        foreach($productVariantIds as $productVariantId) {
+
+            $uniqueCombination = $optionValues->where('product_variant_id', $productVariantId)
+            ->sortBy('global_field_id')
+            ->unique(function($item) {
+                return $item['global_field_id'].$item['value'];
+            });
+            $uniqueCombination = $uniqueCombination->map(function($item) {
+                return $item['global_field_id'].$item['value'];
+            })->implode(',');
+
+            // Is uniqueCombination already in uniqueCombinations?
+            if(in_array($uniqueCombination, $uniqueCombinations)) {
+                return false;
+            }
+            else {
+                $uniqueCombinations[] = $uniqueCombination;
+            }
+
+            $optionValuesForProductVariant = $optionValues->where('product_variant_id', $productVariantId)
+            ->where('value', '!=', null);
+
+            // (2) Each product_variant_id has the same number of global_field_ids with a non-empty value
+            if($globalFieldIds->count() != $optionValuesForProductVariant->count()) {
+                return false;
+            }
+
+            // (3) All variants share the same global_field_ids
+            $globalFieldIdsForProductVariant = $optionValuesForProductVariant->pluck('global_field_id')->unique();
+            if($globalFieldIdsForProductVariant->count() != $globalFieldIds->count()) {
+                return false;
+            }
+        }
+
+        return true;
     }
 
 
