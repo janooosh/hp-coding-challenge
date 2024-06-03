@@ -1,3 +1,10 @@
+This coding challenge has been used to challenge new devs for Hello Pine. 
+It contains an excerpt of a production feature of Hello Pine - merging products.
+Please see the solutions branch for an example solution.
+
+Candidates have been supplied with the following instructions:
+https://docs.google.com/document/d/1ZmrOOIGs8QftZiQGEPYsFrrFi6DrTQfiekErcSzPj44
+
 # Product Merger Challenge
 
 Welcome and thank you for accepting the challenge 🚀
